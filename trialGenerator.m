@@ -140,4 +140,10 @@ for i = 1:trialCount
     end
 end
 
+% Add break
+middleIdx = round(trialCount/2);
+allTrials = [allTrials(1:middleIdx, :); 
+    allTrials(middleIdx+1:height(allTrials), :)];
+
+
 writetable(allTrials, 'tMatchingBrailleTrials.csv');

@@ -320,7 +320,7 @@ block = 1;
 trial = 0;
 for i = 1:trialCount
     % Check if block break
-    if isnan(trials.Item1{i}) % It's a break
+    if strcmp(trials.Item1(i), '') % It's a break
         RestrictKeysForKbCheck([]);
         DrawFormattedText(window, ['This is a break! Press any button ' ...
             'to continue!'], 'center', 'center', black);
