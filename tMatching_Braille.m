@@ -313,6 +313,214 @@ while trialPract
         pause(offsetWarningTime / 1000);
     end
 end
+
+%% Experiment loop
+[trialCount, ~] = size(trials);
+block = 1;
+trial = 0;
+for i = 1:trialCount
+    % Check if block break
+    if isnan(trials.Item1{i}) % It's a break
+        RestrictKeysForKbCheck([]);
+        DrawFormattedText(window, ['This is a break! Press any button ' ...
+            'to continue!'], 'center', 'center', black);
+        Screen('Flip', window);
+        KbWait([], 3);
+        
+        % Increment block counter
+        block = block + 1;
+    else % It's a real trial
+        % Increment trial
+        trial = trial + 1;
+        
+        %% Experimenter preparation screen
+        % Present waiting screen for participant
+        DrawFormattedText(window, ['Please wait as the experimenter ' ...
+            'is preparing for the next trial.'], 'center', 'center', ...
+            black);
+        Screen('Flip', window);
+        
+        %% Item 1
+        % Experimenter screen update
+        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+            'participant is waiting for item 1\n\nItem 1: ' ...
+            num2str(trials.Item1{i}) '\nItem 2: ' ...
+            num2str(trials.Item2{i})], 'center', 'center', black);
+        Screen('Flip', expWindow);
+        GetClicks;
+        
+        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+            'participant is on item 1\n\nItem 1: ' ...
+            num2str(trials.Item1{i}) '\nItem 2: ' ...
+            num2str(trials.Item2{i})], 'center', 'center', black);
+        Screen('Flip', expWindow);
+        
+        % Single Exposure
+        item1Offset = singleExposure(exposureTime, offsetLimit, window, ...
+            slack);
+        
+        % Interitem interval
+        pause(interitemInterval / 1000);
+        
+        % Wait for experimenter
+        DrawFormattedText(window, ['Experimenter is preparing for the ' ...
+            'next part.'], 'center', 'center', black);
+        Screen('Flip', window);
+        
+        %% Test phase
+        % Preparation screen
+        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+            'participant is waiting for item 2\n\nItem 1: ' ...
+            num2str(trials.Item1{i}) '\nItem 2: ' ...
+            num2str(trials.Item2{i})], 'center', 'center', black);
+        Screen('Flip', expWindow);
+        GetClicks;
+        
+        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+            'participant is on item 2\n\nItem 1: ' ...
+            num2str(trials.Item1{i}) '\nItem 2: ' ...
+            num2str(trials.Item2{i})], ...
+            'center', 'center', black);
+        Screen('Flip', expWindow);
+        
+        % Participant preparation screen
+        RestrictKeysForKbCheck(KbName('space'));
+        DrawFormattedText(window, ['Hold down the spacebar and wait ' ...
+            'for the Ready!\nWhen you are ready, release and reach ' ...
+            'for the item.\nYou will be presented an item, respond if ' ...
+            'it is the same or different than the first.'], 'center', ...
+            'center');
+        Screen('Flip', window);
+        KbWait([], 2);
+
+        % Brief pause when holding
+        timer = 0;
+        while timer < 0.5
+            % HOLD!
+            DrawFormattedText(window, 'Hold!', 'center', 'center', 0);
+            Screen('Flip', window);
+
+            if ~KbCheck([])
+                % Redraw preparation screen for letting go
+                DrawFormattedText(window, ['Hold down the spacebar ' ...
+                    'and wait for the Ready!\nWhen you are ready, ' ...
+                    'release and reach for the item.\nYou will be ' ...
+                    'presented an item, respond if it is the same or ' ...
+                    'different than the first.'], 'center', 'center');
+                Screen('Flip', window);
+                KbWait([], 2);
+
+                % Reset time 
+                timer = 0;
+            else
+                % Increment timer and pause
+                timer = timer + 0.25;
+                pause(0.25);
+            end
+        end
+        
+        % Show prepreparation window for experimenter
+        if i == trialCount
+            % Experiment is over
+            DrawFormattedText(expWindow, 'The experiment is over.', ...
+                'center', 'center', black);
+            Screen('Flip', expWindow);
+        elseif isnan(trials.Item1{i + 1})
+            % Next trial is a break
+            DrawFormattedText(expWindow, 'The next trial is a break.', ...
+                'center', 'center', black);
+            Screen('Flip', expWindow);
+        else
+            % Flash blank
+            Screen('Flip', expWindow);
+            pause(0.25);
+            
+            % Prepare for next trial
+            DrawFormattedText(expWindow, ['The next trial is trial ' ...
+                num2str(trial + 1) '\n\nItem 1: ' ...
+                num2str(trials.Item1{i + 1}) '\nItem 2: ' ...
+                num2str(trials.Item2{i + 1})], 'center', 'center', black);
+            Screen('Flip', expWindow);
+        end
+        
+        % Wait for release to start timer
+        DrawFormattedText(window, 'Ready!', 'center', 'center', black);
+        Screen('Flip', window);
+        time = KbWait([], 1);
+        DrawFormattedText(window, 'Same or Different', 'center', ...
+            'center', black);
+        Screen('Flip', window);
+
+        % Unrestrict keys
+        RestrictKeysForKbCheck([]);
+
+        % Response loop
+        keepGoing = true;
+        RT = -1;
+        response = 'invalid';
+        while keepGoing && (GetSecs - time < (testTime/1000))
+            % Check keys
+            [touch, secs, keyCode] = KbCheck([]);
+
+            % There is a key
+            if touch
+                % Check for same keys
+                sameInput = any(arrayfun(@(x) any(x == KbName(sameKeys)), ...
+                    find(keyCode)));
+                % Check for diff keys
+                diffInput = any(arrayfun(@(x) any(x == KbName(diffKeys)), ...
+                    find(keyCode)));
+
+                if sameInput && diffInput % Both same and diff keys were pushed
+                    % Play invalid tone
+                    Beeper(200, 0.4, 0.1);
+                elseif sameInput % Just same keys were pushed
+                    response = 'same';
+                    RT = round(1000 * (secs - time));
+                    keepGoing = false;
+                elseif diffInput % Just diff keys were pushed
+                    response = 'diff';
+                    RT = round(1000 * (secs - time));
+                    keepGoing = false;
+                else % No valid key was pushed
+                    % Play invalid tone
+                    Beeper(200, 0.4, 0.1);
+                end
+            end
+
+            % Pause polling 
+            pause(0.0005);
+        end
+        
+        % Check if there is a response
+        if strcmp(response, 'invalid')
+            DrawFormattedText(window, 'Too slow to hit valid keys!', ...
+                'center', 'center', black);
+            Screen('Flip', window);
+            pause(offsetWarningTime / 1000);
+        end
+        
+        % Check correct
+        correct = sum(strcmp(trials.Correct{i}, response));
+        
+        %% Save data
+        dataFile = fopen(fileName, 'a');
+        %dataFormat = '%d,%d,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s\n';
+        fprintf(dataFile, dataFormat, trial, block, trials.Item1{i}, ...
+            trials.Item2{i}, trials.Correct{i}, response, correct, RT, ...
+            item1Offset, trials.Distance(i), trials.Spaceship1_1(i), ...
+            trials.Spaceship1_2(i), trials.Spaceship1_3(i), ...
+            trials.Spaceship2_1(i), trials.Spaceship2_2(i), ...
+            trials.Spaceship2_3(i), sbjID, ...
+            handedness, experimenter, char(datetime));
+        fclose(dataFile);
+        
+        %% Reset for next trial
+        Screen('Flip', window);
+        pause(intertrialInterval / 1000);
+        
+    end
+end
 catch
 % Save error
 error = lasterror; %#ok<LERR>
