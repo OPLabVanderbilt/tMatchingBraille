@@ -101,11 +101,12 @@ sameDiff = [repmat("same", size(diffTrials, 1), 1); ...
 sameDiff = sameDiff(randperm(length(sameDiff)));
 
 % Make a table for final trial setup
+varNames = {'Item1', 'Item2', 'Difficulty', 'Correct'};
 allTrials = table(repmat("", trialCount, 1), ...
     repmat("", trialCount, 1), ...
     repmat("", trialCount, 1), ...
     sameDiff, ...
-    'VariableNames', {'Item1', 'Item2', 'Difficulty', 'Correct'});
+    'VariableNames', varNames);
 
 diffIdx = 0;
 for i = 1:trialCount
@@ -143,6 +144,7 @@ end
 % Add break
 middleIdx = round(trialCount/2);
 allTrials = [allTrials(1:middleIdx, :); 
+    table("", "", "", "", 'VariableNames', varNames);
     allTrials(middleIdx+1:height(allTrials), :)];
 
 

@@ -11,12 +11,14 @@ commandwindow;
 Screen('Preference', 'SkipSyncTests', 1);
 
 %% Experiment parameters
-windowGap = 250; % Gap between each window
+windowGap = 100; % Gap between each window
 exposureTime = 4000; % Exposure time for each object
 testTime = 8000; % Time limit on response
 intertrialInterval = 1000; % Minimum gap between trials
+interitemInterval = 1000; % Minimum gap between objects within a trial
+feedbackTime = 1500; % Time for feedback screens
 
-trialName = 'tMatchingBrailleTrials.csv';
+trialFile = 'tMatchingBrailleTrials.csv';
 
 % Keys for same
 sameKeys = {'w', 'e', 'r', 's', 'd', 'f', 'z', 'x', 'c'}; 
@@ -64,7 +66,7 @@ fclose(dataFile);
 dataFormat = '%d,%d,%s,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s\n';
 
 % Read trials file
-trials = readtable('tMatchingBrailleTrials.csv');
+trials = readtable(trialFile);
 
 % Default setup for psychtoolbox
 PsychDefaultSetup(2);
@@ -179,6 +181,10 @@ while trialPract
     Screen('Flip', expWindow);
     GetClicks;
     
+    % Blank
+    Screen('Flip', expWindow);
+    pause(windowGap/1000);
+    
     % Experimenter view 
         DrawFormattedText(expWindow, ['Trial practice: participant is ' ...
         'on P1.2\n\nNeed to repeat? ' num2str(trialPract)], 'center', ...
@@ -274,7 +280,7 @@ while trialPract
         DrawFormattedText(window, 'Response too slow!', 'center', ...
             'center', black);
         Screen('Flip', window);
-        pause(offsetWarningTime / 1000);
+        pause(feedbackTime / 1000);
         
         % Reset screen
         Screen('FillRect', window, [1 1 1], [0 0 screenX screenY]);
@@ -288,7 +294,7 @@ while trialPract
             DrawFormattedText(window, 'That is the incorrect answer.', ...
                 'center', 'center', black);
             Screen('Flip', window);
-            pause(offsetWarningTime / 1000);
+            pause(feedbackTime / 1000);
 
             % Force another practice trial
             trialPract = true;
@@ -296,7 +302,7 @@ while trialPract
             DrawFormattedText(window, 'That is correct!', 'center', ...
                 'center', black);
             Screen('Flip', window);
-            pause(offsetWarningTime / 1000);
+            pause(feedbackTime / 1000);
         end
     end
     
@@ -305,12 +311,12 @@ while trialPract
         DrawFormattedText(window, 'We will run another practice trial', ...
             'center', 'center', black);
         Screen('Flip', window);
-        pause(offsetWarningTime / 1000);
+        pause(feedbackTime / 1000);
     else
         DrawFormattedText(window, 'Now onto real trials', 'center', ...
             'center', black);
         Screen('Flip', window);
-        pause(offsetWarningTime / 1000);
+        pause(feedbackTime / 1000);
     end
 end
 
@@ -344,15 +350,18 @@ for i = 1:trialCount
         % Experimenter screen update
         DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
             'participant is waiting for item 1\n\nItem 1: ' ...
-            num2str(trials.Item1{i}) '\nItem 2: ' ...
-            num2str(trials.Item2{i})], 'center', 'center', black);
+            trials.Item1(i) '\nItem 2: ' trials.Item2(i)], 'center', ...
+            'center', black);
         Screen('Flip', expWindow);
         GetClicks;
         
+        % Blank
+        Screen('Flip', expWindow);
+        pause(windowGap / 1000);
+    
         DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
-            'participant is on item 1\n\nItem 1: ' ...
-            num2str(trials.Item1{i}) '\nItem 2: ' ...
-            num2str(trials.Item2{i})], 'center', 'center', black);
+            'participant is on item 1\n\nItem 1: ' trials.Item1(i) ...
+            '\nItem 2: ' trials.Item2(i)], 'center', 'center', black);
         Screen('Flip', expWindow);
         
         % Single Exposure
@@ -371,16 +380,18 @@ for i = 1:trialCount
         % Preparation screen
         DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
             'participant is waiting for item 2\n\nItem 1: ' ...
-            num2str(trials.Item1{i}) '\nItem 2: ' ...
-            num2str(trials.Item2{i})], 'center', 'center', black);
+            trials.Item1(i) '\nItem 2: ' trials.Item2(i)], 'center', ...
+            'center', black);
         Screen('Flip', expWindow);
         GetClicks;
         
+        % Blank
+        Screen('Flip', expWindow);
+        pause(windowGap / 1000); 
+        
         DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
-            'participant is on item 2\n\nItem 1: ' ...
-            num2str(trials.Item1{i}) '\nItem 2: ' ...
-            num2str(trials.Item2{i})], ...
-            'center', 'center', black);
+            'participant is on item 2\n\nItem 1: ' trials.Item1(i) ...
+            '\nItem 2: ' trials.Item2(i)], 'center', 'center', black);
         Screen('Flip', expWindow);
         
         % Participant preparation screen
@@ -425,7 +436,7 @@ for i = 1:trialCount
             DrawFormattedText(expWindow, 'The experiment is over.', ...
                 'center', 'center', black);
             Screen('Flip', expWindow);
-        elseif isnan(trials.Item1{i + 1})
+        elseif strcmp(trials.Item1(i + 1), '')
             % Next trial is a break
             DrawFormattedText(expWindow, 'The next trial is a break.', ...
                 'center', 'center', black);
@@ -437,9 +448,9 @@ for i = 1:trialCount
             
             % Prepare for next trial
             DrawFormattedText(expWindow, ['The next trial is trial ' ...
-                num2str(trial + 1) '\n\nItem 1: ' ...
-                num2str(trials.Item1{i + 1}) '\nItem 2: ' ...
-                num2str(trials.Item2{i + 1})], 'center', 'center', black);
+                num2str(trial + 1) '\n\nItem 1: ' trials.Item1(i + 1) ...
+                '\nItem 2: ' trials.Item2(i + 1)], 'center', 'center', ...
+                black);
             Screen('Flip', expWindow);
         end
         
@@ -497,29 +508,44 @@ for i = 1:trialCount
             DrawFormattedText(window, 'Too slow to hit valid keys!', ...
                 'center', 'center', black);
             Screen('Flip', window);
-            pause(offsetWarningTime / 1000);
+            pause(feedbackTime / 1000);
         end
         
         % Check correct
-        correct = sum(strcmp(trials.Correct{i}, response));
+        correct = sum(strcmp(trials.Correct(i), response));
         
         %% Save data
         dataFile = fopen(fileName, 'a');
-        %dataFormat = '%d,%d,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s\n';
-        fprintf(dataFile, dataFormat, trial, block, trials.Item1{i}, ...
-            trials.Item2{i}, trials.Correct{i}, response, correct, RT, ...
-            item1Offset, trials.Distance(i), trials.Spaceship1_1(i), ...
-            trials.Spaceship1_2(i), trials.Spaceship1_3(i), ...
-            trials.Spaceship2_1(i), trials.Spaceship2_2(i), ...
-            trials.Spaceship2_3(i), sbjID, ...
-            handedness, experimenter, char(datetime));
+        % dataFormat = '%d,%d,%s,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s\n';
+        fprintf(dataFile, dataFormat, trial, block, trials.Item1(i), ...
+            trials.Item2(i), trials.Correct(i), response, correct, RT, ...
+            item1Offset, sbjID, handedness, experimenter, char(datetime));
         fclose(dataFile);
         
         %% Reset for next trial
         Screen('Flip', window);
+        Screen('Flip', expWindow);
         pause(intertrialInterval / 1000);
-        
     end
+end
+
+% Task completion screen
+RestrictKeysForKbCheck(KbName('space'));
+
+Screen('Flip', window);
+center_text(w, 'You have finished this task!', 0);
+center_text(w, 'Press the spacebar', 0, 50);
+Screen('Flip', w);
+
+KbWait([], 3);
+
+% Experiment cleanup
+sca;
+ListenChar();
+ShowCursor();
+RestrictKeysForKbCheck([]);
+if exist('prior', 'var')
+    Priority(prior);
 end
 catch
 % Save error
