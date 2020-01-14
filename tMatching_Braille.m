@@ -83,6 +83,9 @@ black = BlackIndex(screenNumber);
 % Open a window for participant
 [window, ~] = PsychImaging('OpenWindow', screenNumber, white);
 
+% Get info about window
+[screenX, screenY] = Screen('WindowSize', window);
+
 % Set priority high
 prior = Priority(MaxPriority(window));
 
@@ -327,7 +330,7 @@ block = 1;
 trial = 0;
 for i = 1:trialCount
     % Check if block break
-    if strcmp(trials.Item1(i), '') % It's a break
+    if strcmp(trials.Item1{i}, '') % It's a break
         RestrictKeysForKbCheck([]);
         DrawFormattedText(window, ['This is a break! Press any button ' ...
             'to continue!'], 'center', 'center', black);
@@ -349,9 +352,9 @@ for i = 1:trialCount
         
         %% Item 1
         % Experimenter screen update
-        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+        DrawFormattedText(expWindow, ['Trial ' num2str(i) ': ' ...
             'participant is waiting for item 1\n\nItem 1: ' ...
-            trials.Item1(i) '\nItem 2: ' trials.Item2(i)], 'center', ...
+            trials.Item1{i} '\nItem 2: ' trials.Item2{i}], 'center', ...
             'center', black);
         Screen('Flip', expWindow);
         GetClicks;
@@ -360,9 +363,9 @@ for i = 1:trialCount
         Screen('Flip', expWindow);
         pause(windowGap / 1000);
     
-        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
-            'participant is on item 1\n\nItem 1: ' trials.Item1(i) ...
-            '\nItem 2: ' trials.Item2(i)], 'center', 'center', black);
+        DrawFormattedText(expWindow, ['Trial ' num2str(i) ': ' ...
+            'participant is on item 1\n\nItem 1: ' trials.Item1{i} ...
+            '\nItem 2: ' trials.Item2{i}], 'center', 'center', black);
         Screen('Flip', expWindow);
         
         % Single Exposure
@@ -379,9 +382,9 @@ for i = 1:trialCount
         
         %% Test phase
         % Preparation screen
-        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
+        DrawFormattedText(expWindow, ['Trial ' num2str(i) ': ' ...
             'participant is waiting for item 2\n\nItem 1: ' ...
-            trials.Item1(i) '\nItem 2: ' trials.Item2(i)], 'center', ...
+            trials.Item1{i} '\nItem 2: ' trials.Item2{i}], 'center', ...
             'center', black);
         Screen('Flip', expWindow);
         GetClicks;
@@ -390,9 +393,9 @@ for i = 1:trialCount
         Screen('Flip', expWindow);
         pause(windowGap / 1000); 
         
-        DrawFormattedText(expWindow, ['Trial ' num2str(trial) ': ' ...
-            'participant is on item 2\n\nItem 1: ' trials.Item1(i) ...
-            '\nItem 2: ' trials.Item2(i)], 'center', 'center', black);
+        DrawFormattedText(expWindow, ['Trial ' num2str(i) ': ' ...
+            'participant is on item 2\n\nItem 1: ' trials.Item1{i} ...
+            '\nItem 2: ' trials.Item2{i}], 'center', 'center', black);
         Screen('Flip', expWindow);
         
         % Participant preparation screen
@@ -437,7 +440,7 @@ for i = 1:trialCount
             DrawFormattedText(expWindow, 'The experiment is over.', ...
                 'center', 'center', black);
             Screen('Flip', expWindow);
-        elseif strcmp(trials.Item1(i + 1), '')
+        elseif strcmp(trials.Item1{i + 1}, '')
             % Next trial is a break
             DrawFormattedText(expWindow, 'The next trial is a break.', ...
                 'center', 'center', black);
@@ -449,8 +452,8 @@ for i = 1:trialCount
             
             % Prepare for next trial
             DrawFormattedText(expWindow, ['The next trial is trial ' ...
-                num2str(trial + 1) '\n\nItem 1: ' trials.Item1(i + 1) ...
-                '\nItem 2: ' trials.Item2(i + 1)], 'center', 'center', ...
+                num2str(i + 1) '\n\nItem 1: ' trials.Item1{i + 1} ...
+                '\nItem 2: ' trials.Item2{i + 1}], 'center', 'center', ...
                 black);
             Screen('Flip', expWindow);
         end
@@ -513,13 +516,13 @@ for i = 1:trialCount
         end
         
         % Check correct
-        correct = sum(strcmp(trials.Correct(i), response));
+        correct = sum(strcmp(trials.Correct{i}, response));
         
         %% Save data
         dataFile = fopen(fileName, 'a');
         % dataFormat = '%d,%d,%s,%s,%s,%s,%d,%d,%d,%d,%d,%s,%s\n';
-        fprintf(dataFile, dataFormat, trial, block, trials.Item1(i), ...
-            trials.Item2(i), trials.Correct(i), response, correct, RT, ...
+        fprintf(dataFile, dataFormat, trial, block, trials.Item1{i}, ...
+            trials.Item2{i}, trials.Correct{i}, response, correct, RT, ...
             item1Offset, sbjID, handedness, experimenter, char(datetime));
         fclose(dataFile);
         
