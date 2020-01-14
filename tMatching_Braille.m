@@ -14,6 +14,7 @@ Screen('Preference', 'SkipSyncTests', 1);
 windowGap = 100; % Gap between each window
 exposureTime = 4000; % Exposure time for each object
 testTime = 8000; % Time limit on response
+offsetLimit = 1000; % Offset limit before warning
 intertrialInterval = 1000; % Minimum gap between trials
 interitemInterval = 1000; % Minimum gap between objects within a trial
 feedbackTime = 1500; % Time for feedback screens
