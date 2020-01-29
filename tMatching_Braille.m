@@ -8,7 +8,7 @@ try
 %% Clean up workspace and screen
 commandwindow;
 
-Screen('Preference', 'SkipSyncTests', 1);
+% Screen('Preference', 'SkipSyncTests', 1);
 
 %% Experiment parameters
 windowGap = 100; % Gap between each window
@@ -539,9 +539,9 @@ end
 RestrictKeysForKbCheck(KbName('space'));
 
 Screen('Flip', window);
-center_text(w, 'You have finished this task!', 0);
-center_text(w, 'Press the spacebar', 0, 50);
-Screen('Flip', w);
+center_text(window, 'You have finished this task!', 0);
+center_text(window, 'Press the spacebar', 0, 50);
+Screen('Flip', window);
 
 KbWait([], 3);
 
